@@ -17,12 +17,12 @@
 #include <algorithm>
 #include <map>
 
-#define MAX 100000
+#define MAX 1000
 
 using namespace std;
 
-vector<pair<int, int>> tree(MAX); //(distance,node)
-vector<vector<int>> cityes(MAX, vector < int >(MAX));
+vector<int> tree(MAX); //(distance,node)
+vector<vector<int>> cityes(MAX, vector<int>(MAX));
 vector<int> dist(MAX, 0x3FFFFFFF);
 int quantityOfCityes, quantityOfRoads, startCity, endCity;
 
@@ -45,35 +45,35 @@ int main()
 		start = startCity;
 		end = endCity;
 	}
-	tree[0] = make_pair(0, start); len = 1; dist[start] = 0;
+	tree[0] = start; len = 1; dist[start] = 0;
 	map <int, vector<int>> paths;
 	vector<int> path;
 	path.push_back(startCity);
 	while (len)
 	{
-		pair < int, int > cityPair = tree[0];
-		pop_heap(tree.begin(), tree.begin() + len, greater<pair<int, int>>()); len--;
+		int cityPair = tree[0];
+		pop_heap(tree.begin(), tree.begin() + len, greater<int>()); len--;
 		for (i = 1; i <= quantityOfCityes; i++)
-			if (cityes[cityPair.second][i] && (dist[i] > dist[cityPair.second] + cityes[cityPair.second][i]))
+			if (cityes[cityPair][i] && (dist[i] > dist[cityPair] + cityes[cityPair][i]))
 			{
-				dist[i] = dist[cityPair.second] + cityes[cityPair.second][i];
-				tree[len] = make_pair(dist[i], i); len++;
+				dist[i] = dist[cityPair] + cityes[cityPair][i];
+				tree[len] = i; len++;
 				if (i != end ) {
 					path.push_back(i);
 				}
 				else {
 					paths.insert(make_pair(dist[i], path));
 				}
-				push_heap(tree.begin(), tree.begin() + len, greater<pair<int, int>>());
+				push_heap(tree.begin(), tree.begin() + len, greater<int>());
 			}
 	}
 
 	if (start != endCity) {
 		if (dist[endCity] == 0x3FFFFFFF) {
-			printf("NO");
+			output << "NO";
 		}
 		else {
-			output << dist[endCity];
+			output << dist[endCity] << endl;
 			const vector<int> buf = paths[dist[endCity]];
 			for (int i = 0; i < buf.size(); i++) {
 				output << buf[i] << " ";
@@ -83,10 +83,10 @@ int main()
 	}
 	else {
 		if (dist[startCity] == 0x3FFFFFFF) {
-			printf("NO");
+			output << "NO";
 		}
 		else {
-			output << dist[startCity];
+			output << dist[startCity] << endl;
 			const vector<int> buf = paths[dist[startCity]];
 			for (int i = 0; i < buf.size(); i++) {
 				output << buf[i] << " ";
