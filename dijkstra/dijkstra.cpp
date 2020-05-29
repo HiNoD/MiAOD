@@ -7,102 +7,97 @@
 Нужно найти кратчайший путь из города S в город T.
 */
 
-
 #include <iostream>
-#include <vector>
-#include <string>
-#include <list>
-#include <limits>
-#include <set>
-#include <utility>
-#include <algorithm>
-#include <iterator>
 #include <fstream>
+#include <vector>
+#include <set>
+#include <string>
+#include <cstdio>
+#include <queue>
+#include <algorithm>
+#include <map>
+
+#define MAX 100000
+
 using namespace std;
 
-typedef int vertex_t;
-typedef double weight_t;
+vector<pair<int, int>> tree(MAX); //(distance,node)
+vector<vector<int>> cityes(MAX, vector < int >(MAX));
+vector<int> dist(MAX, 0x3FFFFFFF);
+int quantityOfCityes, quantityOfRoads, startCity, endCity;
 
-const weight_t max_weight = numeric_limits<double>::infinity();
-
-struct neighbor {
-	vertex_t target;
-	weight_t weight;
-	neighbor(vertex_t arg_target, weight_t arg_weight)
-		: target(arg_target), weight(arg_weight) { }
-};
-
-typedef vector<vector<neighbor> > adjacency_list_t;
-
-
-void DijkstraComputePaths(vertex_t source,
-	const adjacency_list_t& adjacency_list, vector<weight_t>& min_distance,
-	vector<vertex_t>& previous) {
-	int n = adjacency_list.size();
-	min_distance.clear();
-	min_distance.resize(n, max_weight);
-	min_distance[source] = 0;
-	previous.clear();
-	previous.resize(n, -1);
-	set<pair<weight_t, vertex_t> > vertex_queue;
-	vertex_queue.insert(make_pair(min_distance[source], source));
-
-	while (!vertex_queue.empty()) {
-		weight_t dist = vertex_queue.begin()->first;
-		vertex_t u = vertex_queue.begin()->second;
-		vertex_queue.erase(vertex_queue.begin());
-
-		const vector<neighbor>& neighbors = adjacency_list[u];
-		for (vector<neighbor>::const_iterator neighbor_iter = neighbors.begin();
-			neighbor_iter != neighbors.end();  neighbor_iter++) {
-			vertex_t v = neighbor_iter->target;
-			weight_t weight = neighbor_iter->weight;
-			weight_t distance_through_u = dist + weight;
-			if (distance_through_u < min_distance[v]) {
-				vertex_queue.erase(make_pair(min_distance[v], v));
-
-				min_distance[v] = distance_through_u;
-				previous[v] = u;
-				vertex_queue.insert(make_pair(min_distance[v], v));
-			}
-		}
-	}
-}
-
-
-list<vertex_t> DijkstraGetShortestPathTo(vertex_t vertex,
-	const vector<vertex_t>& previous) {
-	list<vertex_t> path;
-	for (; vertex != -1; vertex = previous[vertex])
-		path.push_front(vertex);
-	return path;
-}
-
-
-int main() {
-	int numberOfCityes, startCity, endCity, countRoads, firstCity, secondCity, distance;
+int main()
+{
 	fstream input("input.txt");
 	ofstream output("output.txt");
-	input >> numberOfCityes >> countRoads >> startCity >> endCity;
-	adjacency_list_t adjacency_list(numberOfCityes+1);
+	int i, len, firstCity, secondCity, weightRoad, start, end;
+	input >> quantityOfCityes >> quantityOfRoads >> startCity >> endCity;
 	while (!input.eof()) {
-		input >> firstCity >> secondCity >> distance;
-		adjacency_list[firstCity].push_back(neighbor(secondCity, distance));
-		adjacency_list[secondCity].push_back(neighbor(firstCity, distance));
+		input >> firstCity >> secondCity >> weightRoad;
+		cityes[firstCity][secondCity] = weightRoad;
+		cityes[secondCity][firstCity] = weightRoad;
 	}
-	vector<weight_t> min_distance;
-	vector<vertex_t> previous;
-	DijkstraComputePaths(startCity, adjacency_list, min_distance, previous);
-	if (min_distance[endCity] == numeric_limits<double>::infinity()) {
-		output << "No" << endl;
+	if (startCity > endCity) {
+		start = endCity;
+		end = startCity;
 	}
 	else {
-		output << min_distance[endCity] << endl;
-		list<vertex_t> path = DijkstraGetShortestPathTo(endCity, previous);
-		copy(path.begin(), path.end(), ostream_iterator<vertex_t>(output, " "));
-		output << endl;
+		start = startCity;
+		end = endCity;
 	}
+	tree[0] = make_pair(0, start); len = 1; dist[start] = 0;
+	map <int, vector<int>> paths;
+	vector<int> path;
+	path.push_back(startCity);
+	while (len)
+	{
+		pair < int, int > cityPair = tree[0];
+		pop_heap(tree.begin(), tree.begin() + len, greater<pair<int, int>>()); len--;
+		for (i = 1; i <= quantityOfCityes; i++)
+			if (cityes[cityPair.second][i] && (dist[i] > dist[cityPair.second] + cityes[cityPair.second][i]))
+			{
+				dist[i] = dist[cityPair.second] + cityes[cityPair.second][i];
+				tree[len] = make_pair(dist[i], i); len++;
+				if (i != end ) {
+					path.push_back(i);
+				}
+				else {
+					paths.insert(make_pair(dist[i], path));
+				}
+				push_heap(tree.begin(), tree.begin() + len, greater<pair<int, int>>());
+			}
+	}
+
+	if (start != endCity) {
+		if (dist[endCity] == 0x3FFFFFFF) {
+			printf("NO");
+		}
+		else {
+			output << dist[endCity];
+			const vector<int> buf = paths[dist[endCity]];
+			for (int i = 0; i < buf.size(); i++) {
+				output << buf[i] << " ";
+			}
+			output << endCity;
+		}
+	}
+	else {
+		if (dist[startCity] == 0x3FFFFFFF) {
+			printf("NO");
+		}
+		else {
+			output << dist[startCity];
+			const vector<int> buf = paths[dist[startCity]];
+			for (int i = 0; i < buf.size(); i++) {
+				output << buf[i] << " ";
+			}
+			output << endCity;
+		}
+	}
+
 	input.close();
 	output.close();
+
 	return 0;
+
 }
